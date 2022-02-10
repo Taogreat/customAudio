@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>audio</title>
+    <script type="text/javascript" src="js/rem.js"></script>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        #audio{
+            display: none;
+        }
+        .custom-audio{
+            width: 6.52rem;
+            height: 1.5rem;
+            background: #EBEBEB;
+            border-radius: .2rem;
+            margin: 10% auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 .23rem 0 .26rem;
+            box-sizing: border-box;
+        }
+        .btn-icon{
+            width: .63rem;
+            height: .63rem;
+        }
+        .center-part{
+            width: 4.49rem;
+            height: .06rem;
+            position: relative;
+        }
+        .title{
+            position: absolute;
+            top: -.5rem;
+            left: 0;
+            display: flex;
+            align-items: center;
+        }
+        .title p{
+            font-size: .24rem;
+            color: #000000;
+            margin-right: .06rem;
+        }
+        .title span{
+            font-size: .18rem;
+            text-align: center;
+            color: #999999;
+        }
+        .progress{
+            width: 100%;
+            height: 100%;
+            background: #999999;
+            border-radius: .55rem;
+        }
+        .progress-inner{
+            width: 0;
+            height: 100%;
+            background: #0FB734;
+            position: relative;
+            transition: width .5s linear;
+        }
+        .progress-inner::after{
+            content:'';
+            display: block;
+            width: .2rem;
+            height: .2rem;
+            position: absolute;
+            right: -.1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #000000;
+            border-radius: 50%;
+        }
+        .audio-time{
+            display: flex;
+            align-items: center;
+            position: absolute;
+            right: 0;
+            bottom: -.5rem;
+        }
+        .play-type{
+            width: .3rem;
+            height: .3rem;
+            margin-right: .1rem;
+        }
+        .audio-time span{
+            font-size: .22rem;
+            color: #999999;
+        }
+        .volume{
+            width: .38rem;
+            height: .38rem;
+        }
+    </style>
+</head>
+<body>
+    <audio id="audio"></audio>
+    <div class="custom-audio">
+        <img class="btn-icon" src="./icons/icon05.png" alt="">
+        <div class="center-part">
+            <div class="title">
+                <p>第1集</p>
+                <span>共12集</span>
+            </div>
+            <div class="progress">
+                <div class="progress-inner"></div>
+            </div>
+            <div class="audio-time">
+                <img class="play-type" src="./icons/icon02.png" alt="">
+                <span class="time-text">00:00/00:00</span>
+            </div>
+        </div>
+        <img class="volume" src="./icons/icon03.png" alt="">
+    </div>
+    <script>
+        window.onload=function(){
+            // dom元素
+            const audio = document.getElementById('audio')
+            const btnIcon = document.querySelector('.btn-icon')
+            const volume = document.querySelector('.volume')
+            const timeText = document.querySelector('.time-text')
+            const inner = document.querySelector('.progress-inner')
+
+            let interval //定时器标识
+            let audioStatus = false //播放状态
+
+            audio.src = './file/1.m4a'
+            audio.addEventListener('loadedmetadata',function(){ //加载元数据（比如尺寸和持续时间）时，发生此事件
+                playStatus(!audio.paused)
+                isMuted(audio.muted)
+                let duration=timeFormate(audio.duration)
+                interval = setInterval(() => {
+                    let currentTime = timeFormate(audio.currentTime)
+                    timeText.innerHTML = `${currentTime}/${duration}`
+                    let rate = parseFloat(audio.currentTime)/parseFloat(audio.duration)*100>100?100:parseFloat(audio.currentTime)/parseFloat(audio.duration)*100
+                    inner.style.width = rate+'%'
+                }, 500)
+            })
+            audio.addEventListener("playing", function(){//监听音频播放
+                playStatus(true)
+            })
+            audio.addEventListener("pause", function(){//监听音频暂停
+                playStatus(false)
+            })
+            audio.addEventListener("ended", function(){//音频播放结束
+                timeText.innerHTML = `${timeFormate(audio.duration)}/${timeFormate(audio.duration)}`
+                clearInterval(interval)
+            })
+
+            // 播放按钮点击事件
+            btnIcon.addEventListener("click", function(){
+                audioStatus = !audioStatus
+                playStatus(audioStatus)
+            })
+
+            // 静音切换
+            volume.addEventListener("click", function(){
+                audio.muted=!audio.muted
+                isMuted(audio.muted)
+            })
+
+            // 更新声音图标
+            function isMuted(muted){
+                if(muted){//静音
+                    volume.src='./icons/icon06.png'
+                }else{
+                    volume.src='./icons/icon03.png'
+                }
+            }
+
+            // 更新播放状态
+            function playStatus(status){
+                if(status){
+                    btnIcon.src='./icons/icon04.png'
+                    audioStatus = true
+                    audio.play()
+                }else{
+                    btnIcon.src='./icons/icon05.png'
+                    audioStatus = false
+                    audio.pause()
+                }
+            }
+
+            // 时间格式化方法
+            function timeFormate(time){
+                time = Math.round(time)
+                let hours = parseInt(time/3600)<10 ? ('0'+parseInt(time/3600)) : parseInt(time/3600)
+                let minutes = parseInt(time/60)<10 ? ('0'+parseInt(time/60)) : parseInt(time/60)
+                let seconds = time%60<10 ? ('0'+time%60) : time%60
+                if(hours == '00'){
+                    return `${minutes}:${seconds}`
+                }else{
+                    return `${hours}:${minutes}:${seconds}`
+                }
+            }
+        
+        }
+    </script>
+</body>
+</html>
